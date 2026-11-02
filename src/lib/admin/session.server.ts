@@ -1,17 +1,30 @@
 import { createHash } from "node:crypto";
 import { getRequestIP, useSession } from "@tanstack/react-start/server";
 import { getSql } from "@/lib/db";
-import { credentialsMatch, generateBase32Secret, normalizeAdminId, otpauthUri, verifyTotp } from "./totp";
+import { qrSvg } from "./qr.server";
+import { generateBase32Secret, normalizeAdminId, otpauthUri, safeEqual, verifyTotp } from "./totp";
 
 type AdminSession = { admin?: boolean; id?: string; main?: boolean };
 
 const fails = new Map<string, { n: number; until: number }>();
 
-function sessionPassword(): string | null {
+async function confirmedMainSecret(): Promise<string | null> {
+  const envSecret = process.env.ADMIN_TOTP_SECRET?.trim();
+  if (envSecret) return envSecret;
+  const id = process.env.ADMIN_ID?.trim();
+  if (!id) return null;
+  const sql = await getSql();
+  const rows = await sql<{ secret: string }>`
+    select secret from admin_totp where id = ${id} and confirmed = true
+  `;
+  return rows[0]?.secret ?? null;
+}
+
+async function sessionPassword(): Promise<string | null> {
   const explicit = process.env.ADMIN_SESSION_SECRET?.trim();
   if (explicit && explicit.length >= 32) return explicit;
   const id = process.env.ADMIN_ID?.trim();
-  const secret = process.env.ADMIN_TOTP_SECRET?.trim();
+  const secret = await confirmedMainSecret();
   if (!id || !secret) return null;
   return createHash("sha256").update(`raven-admin:${id}:${secret}`).digest("hex");
 }
@@ -51,7 +64,7 @@ function mark(ip: string, ok: boolean) {
 }
 
 export async function readAdminSession(): Promise<{ authed: boolean; main: boolean; id: string }> {
-  const password = sessionPassword();
+  const password = await sessionPassword();
   if (!password) return { authed: false, main: false, id: "" };
   const session = await useSession<AdminSession>(sessionOptions(password));
   if (session.data.admin !== true) return { authed: false, main: false, id: "" };
@@ -87,14 +100,60 @@ async function accountById(id: string): Promise<{ id: string; secret: string } |
   return rows[0] ?? null;
 }
 
+export async function prepareAdminLogin(id: string): Promise<{ mode: "code" } | { mode: "qr"; svg: string }> {
+  const ip = clientIp();
+  if (locked(ip)) throw new Error("잠시 후 다시 시도하세요.");
+  const main = process.env.ADMIN_ID?.trim() ?? "";
+  if (!main) throw new Error("서버에 관리자 아이디가 없습니다.");
+  if (safeEqual(id.trim(), main)) {
+    if (await confirmedMainSecret()) return { mode: "code" };
+    const sql = await getSql();
+    const existing = await sql<{ secret: string }>`select secret from admin_totp where id = ${main}`;
+    let secret = existing[0]?.secret ?? "";
+    if (!secret) {
+      secret = generateBase32Secret();
+      await sql`insert into admin_totp (id, secret, confirmed) values (${main}, ${secret}, false)`;
+    }
+    return { mode: "qr", svg: await qrSvg(otpauthUri(main, secret)) };
+  }
+  const account = await accountById(id);
+  if (account) return { mode: "code" };
+  mark(ip, false);
+  throw new Error("아이디가 맞지 않습니다.");
+}
+
+async function confirmPending(id: string): Promise<void> {
+  if (process.env.ADMIN_TOTP_SECRET?.trim()) return;
+  const sql = await getSql();
+  await sql`update admin_totp set confirmed = true where id = ${id}`;
+}
+
+async function mainLoginSecret(): Promise<string | null> {
+  const envSecret = process.env.ADMIN_TOTP_SECRET?.trim();
+  if (envSecret) return envSecret;
+  const id = process.env.ADMIN_ID?.trim();
+  if (!id) return null;
+  const sql = await getSql();
+  const rows = await sql<{ secret: string }>`select secret from admin_totp where id = ${id}`;
+  return rows[0]?.secret ?? null;
+}
+
 export async function loginAdminSession(id: string, code: string): Promise<void> {
   const ip = clientIp();
   if (locked(ip)) throw new Error("잠시 후 다시 시도하세요.");
-  const verdict = credentialsMatch(id, code);
-  if (verdict === "unconfigured") throw new Error("서버에 관리자 아이디와 2FA 키가 아직 없습니다.");
+  const main = process.env.ADMIN_ID?.trim() ?? "";
+  if (!main) throw new Error("서버에 관리자 아이디가 없습니다.");
   let matched: { id: string; main: boolean } | null = null;
-  if (verdict === "ok") matched = { id: process.env.ADMIN_ID!.trim(), main: true };
-  else {
+  if (safeEqual(id.trim(), main)) {
+    const secret = await mainLoginSecret();
+    if (!secret) throw new Error("인증 앱을 먼저 등록하세요.");
+    if (!verifyTotp(secret, code)) {
+      mark(ip, false);
+      throw new Error("아이디 또는 인증코드가 맞지 않습니다.");
+    }
+    await confirmPending(main);
+    matched = { id: main, main: true };
+  } else {
     const account = await accountById(id);
     if (account && verifyTotp(account.secret, code)) matched = { id: account.id, main: false };
   }
@@ -102,15 +161,15 @@ export async function loginAdminSession(id: string, code: string): Promise<void>
     mark(ip, false);
     throw new Error("아이디 또는 인증코드가 맞지 않습니다.");
   }
-  const password = sessionPassword();
-  if (!password) throw new Error("서버에 관리자 아이디와 2FA 키가 아직 없습니다.");
+  const password = await sessionPassword();
+  if (!password) throw new Error("서버에 관리자 아이디가 없습니다.");
   const session = await useSession<AdminSession>(sessionOptions(password));
   await session.update({ admin: true, id: matched.id, main: matched.main });
   mark(ip, true);
 }
 
 export async function logoutAdminSession(): Promise<void> {
-  const password = sessionPassword();
+  const password = await sessionPassword();
   if (!password) return;
   const session = await useSession<AdminSession>(sessionOptions(password));
   await session.clear();

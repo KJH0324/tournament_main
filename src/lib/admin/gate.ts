@@ -6,6 +6,13 @@ export const getAdminSession = createServerFn({ method: "GET" }).handler(async (
   return readAdminSession();
 });
 
+export const prepareAdminLogin = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string().trim().min(1, "아이디를 입력하세요.").max(64) }))
+  .handler(async ({ data }) => {
+    const { prepareAdminLogin: prepare } = await import("./session.server");
+    return prepare(data.id);
+  });
+
 export const loginAdmin = createServerFn({ method: "POST" })
   .validator(
     z.object({
