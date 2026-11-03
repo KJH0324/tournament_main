@@ -1,4 +1,4 @@
-import { groups, rootCommands, type CommandSpec, type ScopeLevel } from "./catalog.ts";
+import { groups, rootCommands, type CommandSpec, type OptSpec, type ScopeLevel } from "./catalog.ts";
 
 export const LEVEL_KO: Record<ScopeLevel, string> = {
   admin: "관리",
@@ -104,12 +104,20 @@ const BOT_ONLY = new Set([
   "toss",
 ]);
 
+export type ManualOption = {
+  name: string;
+  required: boolean;
+  meaning: string;
+  value: string;
+};
+
 export type ManualRow = {
   usage: string;
   blurb: string;
   level: string;
   botOnly: boolean;
   options: string;
+  fields: ManualOption[];
 };
 
 export type ManualGroup = {
@@ -119,15 +127,42 @@ export type ManualGroup = {
   rows: ManualRow[];
 };
 
+function optionValue(opt: OptSpec): string {
+  if (opt.type === "integer") {
+    if (opt.min != null && opt.max != null) return `${opt.min}–${opt.max} 정수`;
+    return "정수";
+  }
+  if (opt.type === "role") return "서버 역할";
+  if (opt.type === "user") return "서버 멤버";
+  if (opt.type === "channel") return "텍스트 채널";
+  if (opt.type === "boolean") return "true 또는 false";
+  if (opt.type === "attachment") return "첨부 파일";
+  if (opt.type === "mentionable") return "멤버 또는 역할";
+  const text = opt.description;
+  if (/email/i.test(text)) return "메일 주소. 지울 때는 -";
+  if (/url|URL|link|logo/i.test(text)) return "http 또는 https 주소";
+  if (/YYYY-MM-DD/.test(text)) return text;
+  if (/lowercase/i.test(text)) return "영문 소문자, 숫자, 하이픈";
+  if (/RESET|RESTORE/.test(text)) return text;
+  return "문자열";
+}
+
 function row(group: string, command: CommandSpec): ManualRow {
   const usage = group ? `/${group} ${command.name}` : `/${command.name}`;
-  const options = (command.options ?? []).map((opt) => (opt.required ? opt.name : `${opt.name}?`)).join(" ");
+  const specs = command.options ?? [];
+  const options = specs.map((opt) => (opt.required ? opt.name : `${opt.name}?`)).join(" ");
   return {
     usage,
     blurb: KO[command.key] ?? command.description,
     level: LEVEL_KO[command.level],
     botOnly: BOT_ONLY.has(command.key),
     options,
+    fields: specs.map((opt) => ({
+      name: opt.name,
+      required: Boolean(opt.required),
+      meaning: opt.description,
+      value: optionValue(opt),
+    })),
   };
 }
 

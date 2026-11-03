@@ -99,18 +99,18 @@ function SupportPage() {
           </div>
         ) : null}
         <div>
-          <Label htmlFor="handle">호출명</Label>
+          <Label htmlFor="handle">디스코드 닉네임</Label>
           <TextField id="handle" value={handle} maxLength={24} onChange={(event) => setHandle(event.target.value)} required />
         </div>
         <div>
-          <Label htmlFor="body">상황</Label>
+          <Label htmlFor="body">무슨 일이 있었나요?</Label>
           <AreaField id="body" value={body} maxLength={280} onChange={(event) => setBody(event.target.value)} required />
         </div>
         {error ? <ErrorNote>{error}</ErrorNote> : null}
         {notice ? <p className="text-sm text-ok">{notice}</p> : null}
         <div>
           <Button type="submit" disabled={pending || (category === "emergency" && servers.length === 0)}>
-            남기기
+            {pending ? "보내는 중" : category === "emergency" ? "운영진에게 비상 알림 보내기" : "문의 보내기"}
           </Button>
         </div>
       </form>

@@ -1,8 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { loadConfig, withGuild } from "@/lib/discord/store";
 import { sendEmergency, type MailResult } from "@/lib/mail/resend";
+
+const hits = new Map<string, number[]>();
+
+function allowHit(key: string, limit: number, windowMs: number): boolean {
+  const now = Date.now();
+  const recent = (hits.get(key) ?? []).filter((at) => now - at < windowMs);
+  if (recent.length >= limit) return false;
+  recent.push(now);
+  hits.set(key, recent);
+  return true;
+}
 
 export type MatchStatus = "open" | "live" | "done";
 export type TicketCategory = "bug" | "report" | "emergency";
@@ -166,6 +178,8 @@ function assertMatch(data: z.infer<typeof matchFields>) {
 }
 
 export const getBoard = createServerFn({ method: "GET" }).handler(async (): Promise<Board> => {
+  const { assertAdmin } = await import("@/lib/admin/session.server");
+  await assertAdmin();
   const sql = await getSql();
   await sql`
     insert into desk_settings (id, tour_name, season_label, venue_note)
@@ -208,6 +222,8 @@ export const saveSettings = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
+    const { assertAdmin } = await import("@/lib/admin/session.server");
+    await assertAdmin();
     assertPublicText(data.tourName);
     assertPublicText(data.seasonLabel);
     const sql = await getSql();
@@ -277,6 +293,11 @@ export const createTicket = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }): Promise<{ ok: true; mail: MailResult | "none" }> => {
+    const request = getRequest();
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+    if (!allowHit(`ticket:${ip}`, data.category === "emergency" ? 3 : 5, 10 * 60 * 1000)) {
+      throw new Error("잠시 뒤에 다시 보내 주세요.");
+    }
     const sql = await getSql();
     if (data.category !== "emergency") {
       await sql`

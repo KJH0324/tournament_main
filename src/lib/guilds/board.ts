@@ -24,6 +24,7 @@ export type PublicMatch = {
   startsAt: string | null;
   roomName: string;
   status: string;
+  state: string;
   scoreText: string;
   winner: string;
   judgeName: string;
@@ -46,6 +47,7 @@ function toMatch(row: EventRow): PublicMatch {
     startsAt: iso(row.starts_at),
     roomName: row.room_name,
     status: row.status,
+    state: row.state,
     scoreText: row.score_text,
     winner: row.winner,
     judgeName: row.judge_name,
@@ -207,7 +209,7 @@ export const listResults = createServerFn({ method: "GET" }).handler(async () =>
            g.name as guild_name, g.slug
     from matches m
     join guilds g on g.guild_id = m.guild_id
-    where m.status = 'done'
+    where m.state in ('verified', 'archived')
     order by m.starts_at desc nulls last, m.id desc
     limit 80
   `;

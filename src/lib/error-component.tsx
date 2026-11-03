@@ -1,29 +1,25 @@
-import type { ErrorComponentProps } from "@tanstack/react-router";
-import { TriangleAlert } from "lucide-react";
+import { Link, type ErrorComponentProps } from "@tanstack/react-router";
 
-const FALLBACK_MESSAGE = "An unexpected error occurred. Try reloading the page.";
-
-function errorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) return error.message;
-  if (typeof error === "string" && error) return error;
-  return FALLBACK_MESSAGE;
+export function AppErrorComponent(_props: ErrorComponentProps) {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg px-6 text-center text-fg">
+      <h1 className="text-lg font-semibold">잠시 문제가 생겼습니다</h1>
+      <p className="max-w-md text-sm text-muted">새로고침해도 계속되면 문의로 알려 주세요.</p>
+      <Link to="/support" className="text-sm font-semibold text-accent">
+        문의
+      </Link>
+    </main>
+  );
 }
 
-export function AppErrorComponent({ error }: ErrorComponentProps) {
+export function NotFoundPage() {
   return (
-    <main
-      className={
-        "flex min-h-screen flex-col items-center justify-center gap-3 px-6 text-center " +
-        "bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50"
-      }
-    >
-      <span className="text-red-500" aria-hidden="true">
-        <TriangleAlert className="size-10" strokeWidth={2} />
-      </span>
-      <h1 className="text-lg font-semibold">Something went wrong</h1>
-      <p className="max-w-md text-sm break-words text-zinc-500 dark:text-zinc-400">
-        {errorMessage(error)}
-      </p>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-bg px-6 text-center text-fg">
+      <h1 className="text-lg font-semibold">이 서버를 찾을 수 없습니다</h1>
+      <p className="max-w-md text-sm text-muted">주소가 바뀌었거나 아직 등록되지 않은 서버입니다.</p>
+      <Link to="/" className="text-sm font-semibold text-accent">
+        홈
+      </Link>
     </main>
   );
 }

@@ -77,9 +77,9 @@ export const TRANSITIONS: Record<string, string[]> = {
 };
 
 export function boardStatus(state: string): "open" | "live" | "done" {
-  if (state === "in_progress") return "live";
-  if (state === "scheduled" || state === "checkin_open") return "open";
-  return "done";
+  if (state === "verified" || state === "archived") return "done";
+  if (state === "in_progress" || state === "result_submitted") return "live";
+  return "open";
 }
 
 export type Tone = "success" | "error" | "alert" | "warning";

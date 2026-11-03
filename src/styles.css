@@ -2,20 +2,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #08111f;
-  --color-surface: #0f1d36;
-  --color-surface-2: #14284a;
-  --color-fg: #eef4ff;
-  --color-muted: #aab8db;
-  --color-accent: #7ec8ff;
-  --color-accent-2: #6ef2c2;
-  --color-ink: #06121f;
-  --color-line: #314872;
-  --color-ok: #7ff0ba;
-  --color-danger: #ff9ca9;
-  --color-warn: #ffd07a;
+  --color-bg: #0b0b0c;
+  --color-surface: #141416;
+  --color-surface-2: #1c1c1f;
+  --color-fg: #f4f4f5;
+  --color-muted: #a1a1aa;
+  --color-accent: #8b5cf6;
+  --color-accent-2: #8b5cf6;
+  --color-ink: #0b0b0c;
+  --color-line: #2a2a2e;
+  --color-ok: #86efac;
+  --color-danger: #f87171;
+  --color-warn: #fbbf24;
   --font-sans: "IBM Plex Sans KR", "Segoe UI", Arial, sans-serif;
-  --shadow-card: 0 28px 68px rgb(0 0 0 / 0.28);
+  --shadow-card: none;
 }
 
 @layer base {
@@ -33,79 +33,69 @@
     min-height: 100vh;
     color: var(--color-fg);
     font-family: var(--font-sans);
-    line-height: 1.55;
-    background:
-      radial-gradient(circle at 12% 0%, rgb(98 167 255 / 0.24), transparent 32%),
-      radial-gradient(circle at 88% 6%, rgb(110 242 194 / 0.14), transparent 26%),
-      linear-gradient(145deg, #08111f, #0f1d36 44%, #14284a 100%);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
-    }
+    line-height: 1.5;
+    background: var(--color-bg);
+    font-variant-numeric: tabular-nums;
   }
 }
 
 .mc-mark {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
   display: grid;
   place-items: center;
-  font-weight: 800;
-  color: var(--color-ink);
-  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
-  box-shadow: 0 0 28px rgb(98 167 255 / 0.24);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: var(--color-accent);
 }
 
 .mc-panel {
-  border: 1px solid rgb(118 158 255 / 0.24);
-  border-radius: 24px;
-  background: linear-gradient(160deg, rgb(10 22 44 / 0.9), rgb(12 30 58 / 0.96));
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  background: var(--color-surface);
 }
 
 .mc-nav {
-  min-height: 42px;
-  padding: 0 16px;
-  border-radius: 14px;
-  border: 1px solid rgb(118 158 255 / 0.28);
-  background: linear-gradient(135deg, rgb(38 77 144 / 0.95), rgb(20 52 100 / 0.95));
-  color: var(--color-fg);
-  font-weight: 700;
-  font-size: 13px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-muted);
+  font-weight: 600;
+  font-size: 14px;
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
-  transition: border-color 180ms ease;
 }
 
 .mc-nav:hover {
-  border-color: rgb(126 200 255 / 0.46);
+  color: var(--color-fg);
 }
 
 .mc-nav.is-active {
-  color: var(--color-ink);
-  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+  color: var(--color-fg);
+  border-color: var(--color-line);
+  background: var(--color-surface-2);
 }
 
 .mc-primary {
   border-color: transparent;
-  color: var(--color-ink);
-  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
-  box-shadow: 0 18px 30px rgb(66 166 255 / 0.2);
+  color: #fff;
+  background: var(--color-accent);
 }
 
 .mc-primary:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.08);
 }
 
-@media (max-width: 720px) {
-  .mc-nav-scroll {
-    mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 28px), transparent);
-  }
+.admin-shell {
+  background: #101014;
+}
+
+.score {
+  font-variant-numeric: tabular-nums;
 }

@@ -111,12 +111,12 @@ async function guildLabel(guildId: string): Promise<string> {
 async function gate(ctx: CommandContext): Promise<Reply | null> {
   const spec = listCommands().find((row) => row.command.key === ctx.key)?.command;
   if (!spec) return fail("[ERROR] Unknown command.");
-  if (!rateOk(ctx)) return warn("[ALERT] Command throughput limit reached. Retry after 60s.");
+  if (!rateOk(ctx)) return warn("명령을 너무 빨리 보냈어요. 1분 뒤 다시 해 주세요.");
   const config = await loadConfig();
   const missing = missingRoles(config);
   if (missing.length) {
     if (ctx.key === "config_set" && isAdministrator(ctx)) return null;
-    return fail(`[PROTOCOL] Authorization locked until /config set binds: ${missing.join(", ")}.`);
+    return fail(`먼저 /config set으로 역할을 지정해 주세요: ${missing.join(", ")}.`);
   }
   const fields = SCOPE_FIELDS[spec.level] ?? [];
   const allowed = fields.some((field) => {
@@ -124,7 +124,7 @@ async function gate(ctx: CommandContext): Promise<Reply | null> {
     return roleId && ctx.roleIds.includes(roleId);
   });
   if (allowed || isAdministrator(ctx)) return null;
-  return fail("[PROTOCOL] Unauthorized unit. Required role is not on this member.");
+  return fail("이 명령은 운영진 역할이 있어야 쓸 수 있어요.");
 }
 
 async function runGuarded(ctx: CommandContext): Promise<Reply> {
@@ -145,26 +145,27 @@ async function runGuarded(ctx: CommandContext): Promise<Reply> {
 }
 
 export async function dispatch(ctx: CommandContext): Promise<Reply> {
-  if (!ctx.guildId) return fail("[PROTOCOL] Slash commands run inside a server, not in DMs.");
+  if (!ctx.guildId) return fail("이 명령은 서버 채널에서만 쓸 수 있어요.");
   return withGuild(ctx.guildId, () => runGuarded(ctx));
 }
 
 export async function onComponent(customId: string, ctx: CommandContext): Promise<Reply> {
-  if (!ctx.guildId) return fail("[PROTOCOL] This control runs inside a server, not in DMs.");
+  if (!ctx.guildId) return fail("이 명령은 서버 채널에서만 쓸 수 있어요.");
   return withGuild(ctx.guildId, async () => {
+    if (!rateOk(ctx)) return warn("명령을 너무 빨리 보냈어요. 1분 뒤 다시 해 주세요.");
     await ensureGuild(ctx.guildId!, await guildLabel(ctx.guildId!));
     const category = customId.startsWith("ticket:") ? customId.slice("ticket:".length) : "";
     if (category !== "bug" && category !== "report" && category !== "emergency") {
       return fail("[ERROR] Unknown control.");
     }
     const id = await openTicket(category, clean(ctx.username, 24), category === "emergency" ? "비상 버튼" : `${category} uplink`);
-    let channelNote = "Saved on this server.";
+    let channelNote = "이 서버에 저장했습니다.";
     if (botToken()) {
       try {
         const channelId = await createTextChannel(ctx.guildId!, `ticket-${id}`);
-        if (channelId) channelNote = `Channel <#${channelId}> opened.`;
+        if (channelId) channelNote = `채널 <#${channelId}>`;
       } catch {
-        channelNote = "Saved on this server. Channel creation was skipped.";
+        channelNote = "이 서버에 저장했습니다. 채널은 만들지 못했습니다.";
       }
     }
     let mailNote = "";
@@ -185,7 +186,7 @@ export async function onComponent(customId: string, ctx: CommandContext): Promis
             ? " 이 서버에 수신 메일이 없습니다."
             : " 알림 메일은 나가지 않았습니다.";
     }
-    return ok(`[SUCCESS] Ticket #${id} opened. ${channelNote}${mailNote}`, { ephemeral: true });
+    return ok(`문의 #${id}가 접수됐어요. ${channelNote}${mailNote}`, { ephemeral: true });
   });
 }
 

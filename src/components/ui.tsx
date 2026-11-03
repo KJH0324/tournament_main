@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/cn";
 
 const buttonVariants = cva(
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-50",
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -25,7 +25,7 @@ export function Button({
 }
 
 export const controlClass =
-  "w-full min-h-12 min-w-0 rounded-2xl border border-line bg-bg/80 px-3 py-3 text-base text-fg outline-none placeholder:text-muted focus:border-accent";
+  "w-full min-h-12 min-w-0 rounded-md border border-line bg-surface px-3 py-3 text-base text-fg outline-none placeholder:text-muted focus:border-accent";
 
 export function TextField(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cn(controlClass, props.className)} />;

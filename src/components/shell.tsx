@@ -3,11 +3,10 @@ import { Link, useLoaderData } from "@tanstack/react-router";
 import { cn } from "@/lib/cn";
 
 const links = [
-  { to: "/", label: "서버", exact: true },
+  { to: "/", label: "홈", exact: true },
+  { to: "/commands", label: "슬래시 명령어", exact: false },
   { to: "/results", label: "결과", exact: false },
-  { to: "/commands", label: "명령", exact: false },
   { to: "/support", label: "문의", exact: false },
-  { to: "/admin", label: "관리", exact: false },
 ] as const;
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -40,17 +39,8 @@ export function Shell({ children }: { children: ReactNode }) {
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6 md:py-8">{children}</main>
       <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="font-semibold text-fg">KJH Bot</p>
-            <p className="text-muted">레이븐 토너먼트</p>
-          </div>
-          <nav className="flex flex-wrap gap-x-4 gap-y-2 text-muted">
-            <Link to="/">서버</Link>
-            <Link to="/results">결과</Link>
-            <Link to="/commands">명령</Link>
-            <Link to="/support">문의</Link>
-          </nav>
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 text-sm">
+          <p className="font-semibold">KJH Bot</p>
           <p className="text-muted">raven-tournament.xyz</p>
         </div>
       </footer>
@@ -62,8 +52,26 @@ function BotState() {
   const data = useLoaderData({ from: "__root__" }) as { phase?: string } | undefined;
   const phase = data?.phase;
   const online = phase === "online";
-  const label = online ? "봇 온라인" : phase === "connecting" ? "봇 접속 중" : "봇 오프라인";
+  const label = online ? "온라인" : phase === "connecting" ? "접속 중" : "오프라인";
   return <Pill tone={online ? "brass" : "muted"}>{label}</Pill>;
+}
+
+export function AdminShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="admin-shell min-h-screen text-fg">
+      <header className="border-b border-line">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+          <Link to="/admin" className="text-sm font-semibold tracking-wide">
+            관리
+          </Link>
+          <a href="/" className="text-sm text-muted">
+            사이트로
+          </a>
+        </div>
+      </header>
+      <main className="mx-auto max-w-6xl px-4 py-6 md:py-8">{children}</main>
+    </div>
+  );
 }
 
 export function PageHead({

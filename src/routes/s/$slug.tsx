@@ -1,20 +1,32 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { getAdminSession } from "@/lib/admin/gate";
 import { getAdminBoard, getServerBoard, getSurface } from "@/lib/guilds/board";
-import { formatKst, statusLabel } from "@/lib/raven/format";
-import { PageHead, Pill, Shell } from "@/components/shell";
+import { NotFoundPage } from "@/lib/error-component";
+import { formatKst, stateLabel } from "@/lib/raven/format";
+import { AdminShell, PageHead, Pill, Shell } from "@/components/shell";
 import { AlertMailForm } from "@/components/alert-mails";
 import { AdminLogin, AdminLogout } from "@/components/admin-login";
 
 export const Route = createFileRoute("/s/$slug")({
+  notFoundComponent: NotFoundPage,
   loader: async ({ params }) => {
     const surface = await getSurface();
     if (surface.admin) {
       const session = await getAdminSession();
       if (!session.authed) return { admin: true as const, authed: false as const, slug: params.slug };
-      return { admin: true as const, authed: true as const, board: await getAdminBoard({ data: { slug: params.slug } }) };
+      try {
+        return { admin: true as const, authed: true as const, board: await getAdminBoard({ data: { slug: params.slug } }) };
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("없는 서버")) throw notFound();
+        throw error;
+      }
     }
-    return { admin: false as const, board: await getServerBoard({ data: { slug: params.slug } }) };
+    try {
+      return { admin: false as const, board: await getServerBoard({ data: { slug: params.slug } }) };
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("없는 서버")) throw notFound();
+      throw error;
+    }
   },
   component: ServerPage,
 });
@@ -35,8 +47,9 @@ function ServerPage() {
 }
 
 function PublicView({ board }: { board: { slug: string; name: string; matches: Match[] } }) {
-  const upcoming = board.matches.filter((match) => match.status !== "done");
-  const done = board.matches.filter((match) => match.status === "done").slice().reverse().slice(0, 8);
+  const upcoming = board.matches.filter((match) => match.state !== "verified" && match.state !== "archived" && match.state !== "aborted");
+  const done = board.matches.filter((match) => match.state === "verified" || match.state === "archived").slice().reverse().slice(0, 8);
+  const aborted = board.matches.filter((match) => match.state === "aborted");
 
   return (
     <Shell>
@@ -55,9 +68,7 @@ function PublicView({ board }: { board: { slug: string; name: string; matches: M
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
-                  <Pill tone={match.status === "live" ? "brass" : "muted"}>
-                    {statusLabel(match.status === "live" ? "live" : match.status === "done" ? "done" : "open")}
-                  </Pill>
+                  <Pill tone={match.state === "in_progress" ? "brass" : "muted"}>{stateLabel(match.state)}</Pill>
                 </div>
                 <h3 className="mt-3 text-3xl font-bold">
                   {match.team1}
@@ -92,6 +103,21 @@ function PublicView({ board }: { board: { slug: string; name: string; matches: M
           </ul>
         )}
       </section>
+      {aborted.length === 0 ? null : (
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold text-muted">중단</h2>
+          <ul className="mt-3 divide-y divide-line border-y border-line">
+            {aborted.map((match) => (
+              <li key={match.id} className="flex items-center justify-between py-3 text-sm text-muted">
+                <span>
+                  {match.team1} 대 {match.team2}
+                </span>
+                <span>중단</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </Shell>
   );
 }
@@ -104,6 +130,7 @@ type Match = {
   groupLabel: string;
   startsAt: string | null;
   status: string;
+  state: string;
   scoreText: string;
   winner: string;
   judgeName: string;
@@ -127,7 +154,7 @@ function AdminView({
   };
 }) {
   return (
-    <Shell>
+    <AdminShell>
       <PageHead title={board.name} />
       <AdminLogout />
       <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -167,7 +194,7 @@ function AdminView({
               <p className="font-bold">
                 {match.team1} 대 {match.team2}
               </p>
-              <p className="text-sm text-muted">{[match.status, formatKst(match.startsAt), match.scoreText].filter(Boolean).join(" · ")}</p>
+              <p className="text-sm text-muted">{[stateLabel(match.state), formatKst(match.startsAt), match.scoreText].filter(Boolean).join(" · ")}</p>
             </li>
           ))
         )}
@@ -187,6 +214,6 @@ function AdminView({
           )}
         </ul>
       </section>
-    </Shell>
+    </AdminShell>
   );
 }

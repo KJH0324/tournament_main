@@ -38,14 +38,13 @@ export function kstInputToIso(value: string): string | null {
   return date.toISOString();
 }
 
-const STATUS_LABEL = {
-  open: "예정",
-  live: "진행",
-  done: "종료",
-} as const;
-
-export function statusLabel(status: keyof typeof STATUS_LABEL): string {
-  return STATUS_LABEL[status];
+export function stateLabel(state: string): string {
+  if (state === "in_progress") return "진행";
+  if (state === "checkin_open") return "체크인";
+  if (state === "result_submitted") return "검증 대기";
+  if (state === "verified" || state === "archived") return "확정";
+  if (state === "aborted") return "중단";
+  return "예정";
 }
 
 export const TICKET_LABEL = {

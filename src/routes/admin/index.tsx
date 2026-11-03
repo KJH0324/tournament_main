@@ -3,7 +3,7 @@ import { getAdminSession, listAdminAccounts } from "@/lib/admin/gate";
 import { listServers } from "@/lib/guilds/board";
 import { AdminAccounts } from "@/components/admin-accounts";
 import { AdminLogout } from "@/components/admin-login";
-import { PageHead, Pill, Shell } from "@/components/shell";
+import { AdminShell, PageHead, Pill } from "@/components/shell";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "관리 · KJH Bot" }] }),
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/admin/")({
 function AdminHome() {
   const { servers, main, accounts } = Route.useLoaderData();
   return (
-    <Shell>
+    <AdminShell>
       <PageHead title="관리" />
       <AdminLogout />
       {main ? <AdminAccounts accounts={accounts} /> : null}
@@ -38,6 +38,6 @@ function AdminHome() {
           </li>
         ))}
       </ul>
-    </Shell>
+    </AdminShell>
   );
 }

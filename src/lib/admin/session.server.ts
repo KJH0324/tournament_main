@@ -119,7 +119,7 @@ export async function prepareAdminLogin(id: string): Promise<{ mode: "code" } | 
   const account = await accountById(id);
   if (account) return { mode: "code" };
   mark(ip, false);
-  throw new Error("아이디가 맞지 않습니다.");
+  throw new Error("아이디 또는 인증코드가 맞지 않습니다.");
 }
 
 async function confirmPending(id: string): Promise<void> {

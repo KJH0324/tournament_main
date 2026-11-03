@@ -1,10 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { getAdminSession } from "@/lib/admin/gate";
 import { getAdminBoard } from "@/lib/guilds/board";
-import { formatKst } from "@/lib/raven/format";
+import { formatKst, stateLabel } from "@/lib/raven/format";
 import { AlertMailForm } from "@/components/alert-mails";
 import { AdminLogout } from "@/components/admin-login";
-import { PageHead, Pill, Shell } from "@/components/shell";
+import { AdminShell, PageHead, Pill } from "@/components/shell";
 
 export const Route = createFileRoute("/admin/s/$slug")({
   head: () => ({ meta: [{ title: "관리 · KJH Bot" }] }),
@@ -27,7 +27,7 @@ const ROLE_LABEL = [
 function AdminServer() {
   const board = Route.useLoaderData();
   return (
-    <Shell>
+    <AdminShell>
       <PageHead title={board.name}>/s/{board.slug}</PageHead>
       <AdminLogout />
       <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -70,7 +70,7 @@ function AdminServer() {
                   {match.team1} 대 {match.team2}
                 </p>
                 <p className="text-sm text-muted">
-                  {[match.status, formatKst(match.startsAt), match.scoreText].filter(Boolean).join(" · ")}
+                  {[stateLabel(match.state), formatKst(match.startsAt), match.scoreText].filter(Boolean).join(" · ")}
                 </p>
               </li>
             ))
@@ -92,6 +92,6 @@ function AdminServer() {
           )}
         </ul>
       </section>
-    </Shell>
+    </AdminShell>
   );
 }
