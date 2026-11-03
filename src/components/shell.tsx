@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLoaderData } from "@tanstack/react-router";
 import { cn } from "@/lib/cn";
 
 const links = [
@@ -35,6 +35,7 @@ export function Shell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
+          <BotState />
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6 md:py-8">{children}</main>
@@ -45,6 +46,14 @@ export function Shell({ children }: { children: ReactNode }) {
       </footer>
     </div>
   );
+}
+
+function BotState() {
+  const data = useLoaderData({ from: "__root__" }) as { phase?: string } | undefined;
+  const phase = data?.phase;
+  const online = phase === "online";
+  const label = online ? "봇 온라인" : phase === "connecting" ? "봇 접속 중" : "봇 오프라인";
+  return <Pill tone={online ? "brass" : "muted"}>{label}</Pill>;
 }
 
 export function PageHead({

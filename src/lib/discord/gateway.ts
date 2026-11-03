@@ -165,9 +165,22 @@ export function ensureGateway() {
   writeGateway({ phase: "connecting", user: "", detail: "접속 중" });
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
   globalRef.__ravenClient = client;
-  client.once(Events.ClientReady, (ready) => {
-    writeGateway({ phase: "online", user: ready.user.tag, detail: "게이트웨이 연결" });
+  const markOnline = (user: string) => {
+    writeGateway({ phase: "online", user, detail: "게이트웨이 연결" });
+  };
+  client.on(Events.ClientReady, (ready) => {
+    markOnline(ready.user.tag);
     void ensureRegistered();
+  });
+  client.on(Events.ShardReady, () => {
+    const user = client.user?.tag ?? "";
+    if (user) markOnline(user);
+  });
+  client.on(Events.ShardReconnecting, () => {
+    writeGateway({ phase: "connecting", user: gatewaySnapshot().user, detail: "다시 접속 중" });
+  });
+  client.on(Events.ShardDisconnect, () => {
+    writeGateway({ phase: "offline", user: gatewaySnapshot().user, detail: "연결이 끊겼습니다." });
   });
   client.on("error", () => {
     writeGateway({ phase: "error", user: gatewaySnapshot().user, detail: "연결 오류" });

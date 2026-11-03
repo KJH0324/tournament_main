@@ -4,6 +4,14 @@ import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
+  loader: async () => {
+    try {
+      const { getBotPresence } = await import("@/lib/discord/presence");
+      return await getBotPresence();
+    } catch {
+      return { phase: "offline" as const, user: "" };
+    }
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
