@@ -50,5 +50,6 @@ export function stateLabel(state: string): string {
 export const TICKET_LABEL = {
   bug: "버그",
   report: "경기 문제",
+  bot: "봇 문제",
   emergency: "비상",
 } as const;

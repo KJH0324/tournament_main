@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useLoaderData } from "@tanstack/react-router";
 import { getAdminSession, listAdminAccounts } from "@/lib/admin/gate";
 import { getSurface, listServers, type ServerCard } from "@/lib/guilds/board";
 import { CommandList } from "@/components/command-list";
@@ -39,12 +39,29 @@ function Home() {
   const data = Route.useLoaderData();
   if (data.admin && !data.authed) return <AdminLogin next="/" />;
   if (data.admin && data.authed) {
+    const open = data.tickets.filter((ticket) => ticket.status === "open").length;
     return (
       <AdminShell>
         <h1 className="text-3xl font-bold">관리자</h1>
         <AdminLogout />
+        <BotLine />
+        <dl className="mt-6 grid gap-3 sm:grid-cols-3">
+          <div className="mc-panel p-4">
+            <dt className="text-xs text-muted">서버</dt>
+            <dd className="mt-1 text-3xl font-bold">{data.servers.length}</dd>
+          </div>
+          <div className="mc-panel p-4">
+            <dt className="text-xs text-muted">열린 문의</dt>
+            <dd className="mt-1 text-3xl font-bold">{open}</dd>
+          </div>
+          <div className="mc-panel p-4">
+            <dt className="text-xs text-muted">접수</dt>
+            <dd className="mt-1 text-3xl font-bold">{data.tickets.length}</dd>
+          </div>
+        </dl>
         {data.main ? <AdminAccounts accounts={data.accounts} /> : null}
         <TicketInbox tickets={data.tickets} />
+        <h2 className="mt-8 text-lg font-semibold">서버</h2>
         <ServerList servers={data.servers} />
       </AdminShell>
     );
@@ -62,6 +79,13 @@ function Home() {
       </section>
     </Shell>
   );
+}
+
+function BotLine() {
+  const root = useLoaderData({ from: "__root__" }) as { phase?: string } | undefined;
+  const phase = root?.phase;
+  const label = phase === "online" ? "온라인" : phase === "connecting" ? "접속 중" : "오프라인";
+  return <p className="mt-2 text-sm text-muted">봇 {label}</p>;
 }
 
 function ServerList({ servers }: { servers: ServerCard[] }) {

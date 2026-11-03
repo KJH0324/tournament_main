@@ -13,7 +13,7 @@ export const Route = createFileRoute("/support")({
   component: SupportPage,
 });
 
-const categories: TicketCategory[] = ["bug", "report", "emergency"];
+const categories: TicketCategory[] = ["bug", "report", "bot", "emergency"];
 
 function mailNote(mail: MailResult | "none"): string {
   if (mail === "sent") return "접수했습니다. 비상 알림을 보냈습니다.";
@@ -40,12 +40,12 @@ function SupportPage() {
     setError("");
     setNotice("");
     try {
-      if (category === "emergency" && !slug) {
-        setError("비상은 서버를 골라야 합니다.");
+      if (!slug) {
+        setError("서버를 고르세요.");
         return;
       }
       const result = await createTicket({
-        data: { category, handle, discordId, email, body, slug: category === "emergency" ? slug : undefined },
+        data: { category, handle, discordId, email, body, slug },
       });
       setHandle("");
       setDiscordId("");
@@ -80,28 +80,20 @@ function SupportPage() {
             ))}
           </div>
         </fieldset>
-        {category === "emergency" ? (
-          <div>
-            <Label htmlFor="server">서버</Label>
-            {servers.length === 0 ? (
-              <p className="text-sm text-muted">등록된 서버가 없습니다.</p>
-            ) : (
-              <select
-                id="server"
-                className={controlClass}
-                value={slug}
-                onChange={(event) => setSlug(event.target.value)}
-                required
-              >
-                {servers.map((server) => (
-                  <option key={server.slug} value={server.slug}>
-                    {server.name}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-        ) : null}
+        <div>
+          <Label htmlFor="server">서버</Label>
+          {servers.length === 0 ? (
+            <p className="text-sm text-muted">등록된 서버가 없습니다.</p>
+          ) : (
+            <select id="server" className={controlClass} value={slug} onChange={(event) => setSlug(event.target.value)} required>
+              {servers.map((server) => (
+                <option key={server.slug} value={server.slug}>
+                  {server.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
         <div>
           <Label htmlFor="handle">디스코드 닉네임</Label>
           <TextField id="handle" value={handle} maxLength={24} onChange={(event) => setHandle(event.target.value)} required />
@@ -136,7 +128,7 @@ function SupportPage() {
         {error ? <ErrorNote>{error}</ErrorNote> : null}
         {notice ? <p className="text-sm text-ok">{notice}</p> : null}
         <div>
-          <Button type="submit" disabled={pending || (category === "emergency" && servers.length === 0)}>
+          <Button type="submit" disabled={pending || servers.length === 0}>
             {pending ? "보내는 중" : category === "emergency" ? "운영진에게 비상 알림 보내기" : "문의 보내기"}
           </Button>
         </div>

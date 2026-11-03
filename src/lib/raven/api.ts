@@ -17,7 +17,7 @@ function allowHit(key: string, limit: number, windowMs: number): boolean {
 }
 
 export type MatchStatus = "open" | "live" | "done";
-export type TicketCategory = "bug" | "report" | "emergency";
+export type TicketCategory = "bug" | "report" | "bot" | "emergency";
 
 export type MatchRow = {
   id: number;
@@ -93,7 +93,7 @@ function asStatus(value: string): MatchStatus {
 }
 
 function asCategory(value: string): TicketCategory {
-  if (value === "bug" || value === "report" || value === "emergency") return value;
+  if (value === "bug" || value === "report" || value === "bot" || value === "emergency") return value;
   return "bug";
 }
 
@@ -294,7 +294,7 @@ export const clearStaff = createServerFn({ method: "POST" })
 export const createTicket = createServerFn({ method: "POST" })
   .validator(
     z.object({
-      category: z.enum(["bug", "report", "emergency"]),
+      category: z.enum(["bug", "report", "bot", "emergency"]),
       handle: handleSchema,
       discordId: discordIdSchema,
       email: emailSchema,
@@ -304,7 +304,7 @@ export const createTicket = createServerFn({ method: "POST" })
         .min(4, "상황을 한 줄은 적어 주세요.")
         .max(280)
         .refine((value) => !value.includes("@") && !/\d{8,}/.test(value), "계정 번호나 연락처는 적지 마세요."),
-      slug: z.string().trim().max(32).optional(),
+      slug: z.string().trim().min(1, "서버를 고르세요.").max(32),
     }),
   )
   .handler(async ({ data }): Promise<{ ok: true; mail: MailResult | "none" }> => {
@@ -315,16 +315,8 @@ export const createTicket = createServerFn({ method: "POST" })
     }
     const email = normalizeAlertEmail(data.email);
     if (!email) throw new Error("메일 주소가 아닙니다.");
+    const slug = data.slug.trim().toLowerCase();
     const sql = await getSql();
-    if (data.category !== "emergency") {
-      await sql`
-        insert into tickets (category, handle, discord_id, email, body, guild_id)
-        values (${data.category}, ${data.handle}, ${data.discordId}, ${email}, ${data.body}, 'site')
-      `;
-      return { ok: true, mail: "none" };
-    }
-    const slug = data.slug?.trim().toLowerCase() ?? "";
-    if (!slug) throw new Error("비상은 서버를 골라야 합니다.");
     const guilds = await sql<{ guild_id: string; name: string }>`
       select guild_id, name from guilds where slug = ${slug}
     `;
@@ -334,6 +326,7 @@ export const createTicket = createServerFn({ method: "POST" })
       insert into tickets (category, handle, discord_id, email, body, guild_id)
       values (${data.category}, ${data.handle}, ${data.discordId}, ${email}, ${data.body}, ${guild.guild_id})
     `;
+    if (data.category !== "emergency") return { ok: true, mail: "none" };
     const mail = await withGuild(guild.guild_id, async () => {
       const config = await loadConfig();
       return sendEmergency({
@@ -413,6 +406,19 @@ export const replyTicket = createServerFn({ method: "POST" })
     `;
     const mail = await sendTicketReply({ to: email, ticketId: data.id, reply: data.reply });
     return { ok: true, mail };
+  });
+
+export const closeTicket = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.number().int().positive() }))
+  .handler(async ({ data }) => {
+    const { assertAdmin } = await import("@/lib/admin/session.server");
+    await assertAdmin();
+    const sql = await getSql();
+    const rows = await sql<{ id: number }>`
+      update tickets set status = 'closed' where id = ${data.id} and status = 'open' returning id
+    `;
+    if (!rows[0]) throw new Error("이미 닫힌 문의입니다.");
+    return { ok: true as const };
   });
 
 type InboxDb = {

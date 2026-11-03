@@ -129,17 +129,62 @@ export const getAdminBoard = createServerFn({ method: "GET" })
     return withGuild(guild.guild_id, async () => {
       const config = await loadConfig();
       const events = (await listEvents()).map(toMatch);
-      const audit = await listAudit(12);
+      const audit = await listAudit(40);
       const sql = await getSql();
+      const gid = guild.guild_id;
       const tickets = await sql<{ n: number }>`
-        select count(*) as n from tickets where guild_id = ${guild.guild_id} and status = 'open'
+        select count(*) as n from tickets where guild_id = ${gid} and status = 'open'
       `;
+      const counts = await sql<{ teams: number; roster: number; bans: number; appeals: number }>`
+        select
+          (select count(distinct team_name) from rosters where guild_id = ${gid}) as teams,
+          (select count(*) from rosters where guild_id = ${gid}) as roster,
+          (select count(*) from bans where guild_id = ${gid}) as bans,
+          (select count(*) from appeals where guild_id = ${gid} and status <> 'closed') as appeals
+      `;
+      const roster = await sql<{ team_name: string; game_id: string; role: string; discord_id: string }>`
+        select team_name, game_id, role, discord_id
+        from rosters
+        where guild_id = ${gid}
+        order by team_name, role desc, game_id
+        limit 400
+      `;
+      const bans = await sql<{ game_id: string; reason: string; banned_by: string; banned_at: string | Date }>`
+        select game_id, reason, banned_by, banned_at
+        from bans
+        where guild_id = ${gid}
+        order by banned_at desc
+        limit 80
+      `;
+      const appeals = await sql<{
+        id: string;
+        match_ref: string;
+        team_name: string;
+        reason: string;
+        status: string;
+        decision: string;
+        created_at: string | Date;
+      }>`
+        select id, match_ref, team_name, reason, status, decision, created_at
+        from appeals
+        where guild_id = ${gid}
+        order by created_at desc
+        limit 40
+      `;
+      const snapshots = await sql<{ id: string; label: string; created_at: string | Date }>`
+        select id, label, created_at from snapshots where guild_id = ${gid} order by created_at desc limit 8
+      `;
+      const count = counts[0];
       return {
         slug: guild.slug,
         name: guild.name || guild.slug,
-        guildId: guild.guild_id,
+        guildId: gid,
         matches: events,
         openTickets: Number(tickets[0]?.n ?? 0),
+        teams: Number(count?.teams ?? 0),
+        rosterCount: Number(count?.roster ?? 0),
+        banCount: Number(count?.bans ?? 0),
+        appealCount: Number(count?.appeals ?? 0),
         roles: {
           admin: Boolean(config.admin_role),
           organizer: Boolean(config.organizer_role),
@@ -147,11 +192,49 @@ export const getAdminBoard = createServerFn({ method: "GET" })
           operator: Boolean(config.operator_role),
           commander: Boolean(config.commander_role),
         },
+        channels: {
+          appeal: config.appeal_channel,
+          participants: config.participants_channel,
+          schedule: config.schedule_channel,
+          results: config.results_channel,
+          notification: config.notification_channel,
+          transcript: config.transcript_channel,
+          thumbnail: config.thumbnail_channel,
+        },
+        challongeUrl: config.challonge_tournament,
         challonge: Boolean(config.challonge_tournament),
         alertCount: alertRecipients([config.alert_email_1, config.alert_email_2, config.alert_email_3]).length,
         emails: [config.alert_email_1, config.alert_email_2, config.alert_email_3] as [string, string, string],
+        roster: roster.map((row) => ({
+          team: row.team_name,
+          gameId: row.game_id,
+          role: row.role,
+          discordId: row.discord_id,
+        })),
+        bans: bans.map((row) => ({
+          gameId: row.game_id,
+          reason: row.reason,
+          by: row.banned_by,
+          at: iso(row.banned_at) ?? "",
+        })),
+        appeals: appeals.map((row) => ({
+          id: row.id,
+          match: row.match_ref,
+          team: row.team_name,
+          reason: row.reason,
+          status: row.status,
+          decision: row.decision,
+          at: iso(row.created_at) ?? "",
+        })),
+        snapshots: snapshots.map((row) => ({
+          id: row.id,
+          label: row.label,
+          at: iso(row.created_at) ?? "",
+        })),
         audit: audit.map((row) => ({
           action: row.action,
+          actor: row.actor_id,
+          detail: row.detail,
           at: iso(row.created_at) ?? "",
         })),
       };

@@ -4,9 +4,8 @@ import { getAdminBoard, getServerBoard, getSurface } from "@/lib/guilds/board";
 import { NotFoundPage } from "@/lib/error-component";
 import { formatKst, stateLabel } from "@/lib/raven/format";
 import { AdminShell, PageHead, Pill, Shell } from "@/components/shell";
-import { listInbox, type InboxTicket } from "@/lib/raven/api";
-import { TicketInbox } from "@/components/ticket-inbox";
-import { AlertMailForm } from "@/components/alert-mails";
+import { listInbox } from "@/lib/raven/api";
+import { AdminDesk } from "@/components/admin-desk";
 import { AdminLogin, AdminLogout } from "@/components/admin-login";
 
 export const Route = createFileRoute("/s/$slug")({
@@ -35,18 +34,17 @@ export const Route = createFileRoute("/s/$slug")({
   component: ServerPage,
 });
 
-const ROLE_LABEL = [
-  ["admin", "관리자"],
-  ["organizer", "오거나이저"],
-  ["supervisor", "슈퍼바이저"],
-  ["operator", "오퍼레이터"],
-  ["commander", "커맨더"],
-] as const;
-
 function ServerPage() {
   const data = Route.useLoaderData();
   if (data.admin && !data.authed) return <AdminLogin next={`/s/${data.slug}`} />;
-  if (data.admin) return <AdminView board={data.board} tickets={data.tickets} />;
+  if (data.admin) {
+    return (
+      <AdminShell>
+        <AdminLogout />
+        <AdminDesk board={data.board} tickets={data.tickets} />
+      </AdminShell>
+    );
+  }
   return <PublicView board={data.board} />;
 }
 
@@ -140,87 +138,3 @@ type Match = {
   judgeName: string;
   recorderName: string;
 };
-
-function AdminView({
-  board,
-  tickets,
-}: {
-  board: {
-    slug: string;
-    name: string;
-    guildId: string;
-    openTickets: number;
-    challonge: boolean;
-    alertCount: number;
-    emails: [string, string, string];
-    roles: Record<(typeof ROLE_LABEL)[number][0], boolean>;
-    matches: Match[];
-    audit: { action: string; at: string }[];
-  };
-  tickets: InboxTicket[];
-}) {
-  return (
-    <AdminShell>
-      <PageHead title={board.name} />
-      <AdminLogout />
-      <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="mc-panel p-4">
-          <dt className="text-xs text-muted">서버 아이디</dt>
-          <dd className="mt-1 break-all font-semibold">{board.guildId}</dd>
-        </div>
-        <div className="mc-panel p-4">
-          <dt className="text-xs text-muted">열린 티켓</dt>
-          <dd className="mt-1 text-3xl font-bold">{board.openTickets}</dd>
-        </div>
-        <div className="mc-panel p-4">
-          <dt className="text-xs text-muted">챌롱</dt>
-          <dd className="mt-1 text-xl font-bold">{board.challonge ? "연결됨" : "없음"}</dd>
-        </div>
-        <div className="mc-panel p-4">
-          <dt className="text-xs text-muted">비상 메일</dt>
-          <dd className="mt-1 text-xl font-bold">{board.alertCount}명</dd>
-        </div>
-      </dl>
-      <ul className="mt-4 flex flex-wrap gap-2">
-        {ROLE_LABEL.map(([key, label]) => (
-          <li key={key}>
-            <Pill tone={board.roles[key] ? "brass" : "muted"}>
-              {label} {board.roles[key] ? "묶임" : "비어 있음"}
-            </Pill>
-          </li>
-        ))}
-      </ul>
-      <AlertMailForm key={board.emails.join("|")} slug={board.slug} emails={board.emails} />
-      <TicketInbox tickets={tickets} />
-      <ul className="mt-3 grid gap-3">
-        {board.matches.length === 0 ? (
-          <li className="mc-panel p-4 text-muted">경기가 없습니다.</li>
-        ) : (
-          board.matches.map((match) => (
-            <li key={match.id} className="mc-panel p-4">
-              <p className="font-bold">
-                {match.team1} 대 {match.team2}
-              </p>
-              <p className="text-sm text-muted">{[stateLabel(match.state), formatKst(match.startsAt), match.scoreText].filter(Boolean).join(" · ")}</p>
-            </li>
-          ))
-        )}
-      </ul>
-      <section className="mt-6">
-        <h2 className="text-sm font-semibold tracking-wide text-accent">최근 명령</h2>
-        <ul className="mc-panel mt-3 divide-y divide-line px-4">
-          {board.audit.length === 0 ? (
-            <li className="py-4 text-muted">기록이 없습니다.</li>
-          ) : (
-            board.audit.map((row, index) => (
-              <li key={`${row.action}-${index}`} className="flex justify-between gap-3 py-3 text-sm">
-                <span className="font-semibold">{row.action}</span>
-                <span className="text-muted">{formatKst(row.at)}</span>
-              </li>
-            ))
-          )}
-        </ul>
-      </section>
-    </AdminShell>
-  );
-}
