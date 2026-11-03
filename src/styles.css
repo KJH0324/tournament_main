@@ -93,7 +93,19 @@
 }
 
 .admin-shell {
-  background: #101014;
+  --color-bg: #fbf7f0;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4ede2;
+  --color-fg: #2b2420;
+  --color-muted: #6b5e54;
+  --color-accent: #2f6b3f;
+  --color-ink: #ffffff;
+  --color-line: #e3d7c5;
+  --color-ok: #256b3a;
+  --color-danger: #a8261d;
+  --color-warn: #7a4e00;
+  background: var(--color-bg);
+  color: var(--color-fg);
 }
 
 .score {

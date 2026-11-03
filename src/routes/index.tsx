@@ -3,6 +3,8 @@ import { getAdminSession, listAdminAccounts } from "@/lib/admin/gate";
 import { getSurface, listServers, type ServerCard } from "@/lib/guilds/board";
 import { CommandList } from "@/components/command-list";
 import { manualGroups } from "@/lib/discord/manual";
+import { listInbox } from "@/lib/raven/api";
+import { TicketInbox } from "@/components/ticket-inbox";
 import { AdminAccounts } from "@/components/admin-accounts";
 import { AdminLogin, AdminLogout } from "@/components/admin-login";
 import { AdminShell, Pill, Shell } from "@/components/shell";
@@ -19,12 +21,14 @@ export const Route = createFileRoute("/")({
     if (!session.authed) return { admin: true as const, authed: false as const, groups };
     const directory = await listServers();
     const accounts = session.main ? await listAdminAccounts() : { accounts: [] };
+    const tickets = await listInbox({ data: {} });
     return {
       admin: true as const,
       authed: true as const,
       main: session.main,
       servers: directory.servers,
       accounts: accounts.accounts,
+      tickets,
       groups,
     };
   },
@@ -40,6 +44,7 @@ function Home() {
         <h1 className="text-3xl font-bold">관리</h1>
         <AdminLogout />
         {data.main ? <AdminAccounts accounts={data.accounts} /> : null}
+        <TicketInbox tickets={data.tickets} />
         <ServerList servers={data.servers} />
       </AdminShell>
     );

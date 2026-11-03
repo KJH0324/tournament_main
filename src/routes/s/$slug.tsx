@@ -4,6 +4,8 @@ import { getAdminBoard, getServerBoard, getSurface } from "@/lib/guilds/board";
 import { NotFoundPage } from "@/lib/error-component";
 import { formatKst, stateLabel } from "@/lib/raven/format";
 import { AdminShell, PageHead, Pill, Shell } from "@/components/shell";
+import { listInbox, type InboxTicket } from "@/lib/raven/api";
+import { TicketInbox } from "@/components/ticket-inbox";
 import { AlertMailForm } from "@/components/alert-mails";
 import { AdminLogin, AdminLogout } from "@/components/admin-login";
 
@@ -15,7 +17,9 @@ export const Route = createFileRoute("/s/$slug")({
       const session = await getAdminSession();
       if (!session.authed) return { admin: true as const, authed: false as const, slug: params.slug };
       try {
-        return { admin: true as const, authed: true as const, board: await getAdminBoard({ data: { slug: params.slug } }) };
+        const board = await getAdminBoard({ data: { slug: params.slug } });
+        const tickets = await listInbox({ data: { guildId: board.guildId } });
+        return { admin: true as const, authed: true as const, board, tickets };
       } catch (error) {
         if (error instanceof Error && error.message.includes("없는 서버")) throw notFound();
         throw error;
@@ -42,7 +46,7 @@ const ROLE_LABEL = [
 function ServerPage() {
   const data = Route.useLoaderData();
   if (data.admin && !data.authed) return <AdminLogin next={`/s/${data.slug}`} />;
-  if (data.admin) return <AdminView board={data.board} />;
+  if (data.admin) return <AdminView board={data.board} tickets={data.tickets} />;
   return <PublicView board={data.board} />;
 }
 
@@ -139,6 +143,7 @@ type Match = {
 
 function AdminView({
   board,
+  tickets,
 }: {
   board: {
     slug: string;
@@ -152,6 +157,7 @@ function AdminView({
     matches: Match[];
     audit: { action: string; at: string }[];
   };
+  tickets: InboxTicket[];
 }) {
   return (
     <AdminShell>
@@ -185,6 +191,7 @@ function AdminView({
         ))}
       </ul>
       <AlertMailForm key={board.emails.join("|")} slug={board.slug} emails={board.emails} />
+      <TicketInbox tickets={tickets} />
       <ul className="mt-3 grid gap-3">
         {board.matches.length === 0 ? (
           <li className="mc-panel p-4 text-muted">경기가 없습니다.</li>

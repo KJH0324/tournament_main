@@ -15,13 +15,13 @@ export function Shell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-10 border-b border-line bg-bg/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
           <Link to="/" className="flex shrink-0 items-center gap-3">
-            <span className="mc-mark text-sm">KJ</span>
+            <img src="/brand/mark-white-on-navy.png" alt="" width={36} height={36} className="h-9 w-9 rounded-md" />
             <span className="leading-tight">
               <span className="block text-lg font-bold tracking-tight">KJH Bot</span>
               <span className="block text-sm text-muted">레이븐 토너먼트</span>
             </span>
           </Link>
-          <nav className="mc-nav-scroll flex flex-1 gap-2 overflow-x-auto">
+          <nav className="flex flex-1 flex-wrap gap-2">
             {links.map((link) => (
               <Link
                 key={link.to}
@@ -65,7 +65,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <div className="admin-shell min-h-screen text-fg">
       <header className="border-b border-line">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <a href="https://admin.raven-tournament.xyz/" className="text-sm font-semibold tracking-wide">
+          <a href="https://admin.raven-tournament.xyz/" className="flex items-center gap-2 text-sm font-semibold tracking-wide">
+            <img src="/brand/mark-black-transparent.png" alt="" width={28} height={28} className="h-7 w-7" />
             관리
           </a>
           <a href="https://raven-tournament.xyz/" className="text-sm text-muted">

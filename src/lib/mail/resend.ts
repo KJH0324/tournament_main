@@ -63,3 +63,34 @@ export async function sendEmergency(input: {
     return "failed";
   }
 }
+
+export async function sendTicketReply(input: { to: string; ticketId: number; reply: string }): Promise<MailResult> {
+  const to = normalizeAlertEmail(input.to);
+  if (!to) return "no_recipient";
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (!key) return "no_key";
+  const from = process.env.RESEND_FROM?.trim() || "레이븐 토너먼트 <alerts@raven-tournament.xyz>";
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject: `문의 #${input.ticketId} 답변`,
+        text: [`문의 #${input.ticketId}에 답변입니다.`, "", input.reply.trim()].join("\n").slice(0, 4000),
+      }),
+    });
+    if (!response.ok) {
+      console.error("[resend]", response.status);
+      return "failed";
+    }
+    return "sent";
+  } catch (err) {
+    console.error("[resend]", err instanceof Error ? err.message : "fetch failed");
+    return "failed";
+  }
+}

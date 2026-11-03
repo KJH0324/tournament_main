@@ -27,6 +27,8 @@ function SupportPage() {
   const [category, setCategory] = useState<TicketCategory>("bug");
   const [slug, setSlug] = useState(servers[0]?.slug ?? "");
   const [handle, setHandle] = useState("");
+  const [discordId, setDiscordId] = useState("");
+  const [email, setEmail] = useState("");
   const [body, setBody] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -43,9 +45,11 @@ function SupportPage() {
         return;
       }
       const result = await createTicket({
-        data: { category, handle, body, slug: category === "emergency" ? slug : undefined },
+        data: { category, handle, discordId, email, body, slug: category === "emergency" ? slug : undefined },
       });
       setHandle("");
+      setDiscordId("");
+      setEmail("");
       setBody("");
       setNotice(mailNote(result.mail));
     } catch (caught) {
@@ -57,7 +61,7 @@ function SupportPage() {
 
   return (
     <Shell>
-      <PageHead title="문의">실명, 계정 번호, 연락처는 적지 마세요.</PageHead>
+      <PageHead title="문의">답은 적은 메일로 갑니다.</PageHead>
 
       <form onSubmit={submit} className="mc-panel mt-8 grid gap-4 p-4 md:p-5">
         <fieldset>
@@ -101,6 +105,29 @@ function SupportPage() {
         <div>
           <Label htmlFor="handle">디스코드 닉네임</Label>
           <TextField id="handle" value={handle} maxLength={24} onChange={(event) => setHandle(event.target.value)} required />
+        </div>
+        <div>
+          <Label htmlFor="discord-id">디스코드 아이디</Label>
+          <TextField
+            id="discord-id"
+            value={discordId}
+            maxLength={32}
+            autoComplete="off"
+            onChange={(event) => setDiscordId(event.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="email">이메일</Label>
+          <TextField
+            id="email"
+            type="email"
+            value={email}
+            maxLength={120}
+            autoComplete="email"
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
         </div>
         <div>
           <Label htmlFor="body">무슨 일이 있었나요?</Label>

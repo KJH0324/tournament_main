@@ -3,7 +3,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { getSql } from "@/lib/db";
 import { loadConfig, withGuild } from "@/lib/discord/store";
-import { sendEmergency, type MailResult } from "@/lib/mail/resend";
+import { normalizeAlertEmail, sendEmergency, sendTicketReply, type MailResult } from "@/lib/mail/resend";
 
 const hits = new Map<string, number[]>();
 
@@ -132,6 +132,19 @@ const handleSchema = z
   .min(1, "호출명을 입력하세요.")
   .max(24, "호출명은 24자까지입니다.")
   .refine((value) => !value.includes("@") && !/\d{8,}/.test(value), "계정 번호나 연락처는 적지 마세요.");
+
+const discordIdSchema = z
+  .string()
+  .trim()
+  .min(2, "디스코드 아이디를 입력하세요.")
+  .max(32, "디스코드 아이디는 32자까지입니다.")
+  .regex(/^[A-Za-z0-9._]+$/, "디스코드 아이디만 입력하세요.");
+
+const emailSchema = z
+  .string()
+  .trim()
+  .max(120)
+  .refine((value) => Boolean(normalizeAlertEmail(value)), "메일 주소가 아닙니다.");
 
 const noteSchema = z
   .string()
@@ -283,6 +296,8 @@ export const createTicket = createServerFn({ method: "POST" })
     z.object({
       category: z.enum(["bug", "report", "emergency"]),
       handle: handleSchema,
+      discordId: discordIdSchema,
+      email: emailSchema,
       body: z
         .string()
         .trim()
@@ -298,11 +313,13 @@ export const createTicket = createServerFn({ method: "POST" })
     if (!allowHit(`ticket:${ip}`, data.category === "emergency" ? 3 : 5, 10 * 60 * 1000)) {
       throw new Error("잠시 뒤에 다시 보내 주세요.");
     }
+    const email = normalizeAlertEmail(data.email);
+    if (!email) throw new Error("메일 주소가 아닙니다.");
     const sql = await getSql();
     if (data.category !== "emergency") {
       await sql`
-        insert into tickets (category, handle, body, guild_id)
-        values (${data.category}, ${data.handle}, ${data.body}, 'site')
+        insert into tickets (category, handle, discord_id, email, body, guild_id)
+        values (${data.category}, ${data.handle}, ${data.discordId}, ${email}, ${data.body}, 'site')
       `;
       return { ok: true, mail: "none" };
     }
@@ -314,8 +331,8 @@ export const createTicket = createServerFn({ method: "POST" })
     const guild = guilds[0];
     if (!guild) throw new Error("없는 서버입니다.");
     await sql`
-      insert into tickets (category, handle, body, guild_id)
-      values (${data.category}, ${data.handle}, ${data.body}, ${guild.guild_id})
+      insert into tickets (category, handle, discord_id, email, body, guild_id)
+      values (${data.category}, ${data.handle}, ${data.discordId}, ${email}, ${data.body}, ${guild.guild_id})
     `;
     const mail = await withGuild(guild.guild_id, async () => {
       const config = await loadConfig();
@@ -329,3 +346,99 @@ export const createTicket = createServerFn({ method: "POST" })
     });
     return { ok: true, mail };
   });
+
+export type InboxTicket = {
+  id: number;
+  category: TicketCategory;
+  handle: string;
+  discordId: string;
+  email: string;
+  body: string;
+  status: "open" | "closed";
+  reply: string;
+  createdAt: string;
+  server: string;
+};
+
+export const listInbox = createServerFn({ method: "GET" })
+  .validator(z.object({ guildId: z.string().max(32).optional() }))
+  .handler(async ({ data }): Promise<InboxTicket[]> => {
+    const { assertAdmin } = await import("@/lib/admin/session.server");
+    await assertAdmin();
+    const sql = await getSql();
+    const rows = data.guildId
+      ? await sql<InboxDb>`
+          select t.id, t.category, t.handle, t.discord_id, t.email, t.body, t.status, t.reply, t.created_at,
+                 coalesce(g.name, '사이트') as server
+          from tickets t
+          left join guilds g on g.guild_id = t.guild_id
+          where t.guild_id = ${data.guildId}
+          order by t.created_at desc
+          limit 40
+        `
+      : await sql<InboxDb>`
+          select t.id, t.category, t.handle, t.discord_id, t.email, t.body, t.status, t.reply, t.created_at,
+                 coalesce(g.name, '사이트') as server
+          from tickets t
+          left join guilds g on g.guild_id = t.guild_id
+          order by t.created_at desc
+          limit 40
+        `;
+    return rows.map(mapInbox);
+  });
+
+export const replyTicket = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      id: z.number().int().positive(),
+      reply: z.string().trim().min(2, "답변을 적어 주세요.").max(1000),
+    }),
+  )
+  .handler(async ({ data }): Promise<{ ok: true; mail: MailResult }> => {
+    const { assertAdmin } = await import("@/lib/admin/session.server");
+    await assertAdmin();
+    const sql = await getSql();
+    const rows = await sql<{ email: string; reply: string }>`
+      select email, reply from tickets where id = ${data.id}
+    `;
+    const ticket = rows[0];
+    if (!ticket) throw new Error("없는 문의입니다.");
+    if (ticket.reply.trim()) throw new Error("이미 답한 문의입니다.");
+    const email = normalizeAlertEmail(ticket.email);
+    if (!email) throw new Error("받을 메일이 없습니다.");
+    await sql`
+      update tickets
+      set reply = ${data.reply}, replied_at = now(), status = 'closed'
+      where id = ${data.id}
+    `;
+    const mail = await sendTicketReply({ to: email, ticketId: data.id, reply: data.reply });
+    return { ok: true, mail };
+  });
+
+type InboxDb = {
+  id: number;
+  category: string;
+  handle: string;
+  discord_id: string;
+  email: string;
+  body: string;
+  status: string;
+  reply: string;
+  created_at: string | Date;
+  server: string;
+};
+
+function mapInbox(row: InboxDb): InboxTicket {
+  return {
+    id: Number(row.id),
+    category: asCategory(row.category),
+    handle: row.handle,
+    discordId: row.discord_id,
+    email: row.email,
+    body: row.body,
+    status: row.status === "closed" ? "closed" : "open",
+    reply: row.reply,
+    createdAt: asIso(row.created_at) ?? new Date(0).toISOString(),
+    server: row.server,
+  };
+}
