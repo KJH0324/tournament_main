@@ -40,11 +40,11 @@ function PublicView({ board }: { board: { slug: string; name: string; matches: M
 
   return (
     <Shell>
-      <PageHead title={board.name}>/s/{board.slug}</PageHead>
+      <PageHead title={board.name} />
       <section className="mt-8">
         <h2 className="text-sm font-semibold tracking-wide text-accent">다음 경기</h2>
         {upcoming.length === 0 ? (
-          <p className="mc-panel mt-3 p-5 text-muted">등록된 경기가 없습니다.</p>
+          <p className="mc-panel mt-3 p-5 text-muted">경기가 없습니다.</p>
         ) : (
           <ul className="mt-3 grid gap-3">
             {upcoming.map((match) => (
@@ -75,7 +75,7 @@ function PublicView({ board }: { board: { slug: string; name: string; matches: M
       <section className="mt-8">
         <h2 className="text-sm font-semibold tracking-wide text-accent">최근 결과</h2>
         {done.length === 0 ? (
-          <p className="mc-panel mt-3 p-5 text-muted">아직 없습니다.</p>
+          <p className="mc-panel mt-3 p-5 text-muted">결과가 없습니다.</p>
         ) : (
           <ul className="mc-panel mt-3 divide-y divide-line px-4">
             {done.map((match) => (
@@ -128,7 +128,7 @@ function AdminView({
 }) {
   return (
     <Shell>
-      <PageHead title={board.name}>/s/{board.slug}</PageHead>
+      <PageHead title={board.name} />
       <AdminLogout />
       <dl className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="mc-panel p-4">

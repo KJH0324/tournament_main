@@ -8,7 +8,7 @@ import { AreaField, Button, Label, TextField, controlClass } from "@/components/
 import type { MailResult } from "@/lib/mail/resend";
 
 export const Route = createFileRoute("/support")({
-  head: () => ({ meta: [{ title: "문의 · Mission Control" }] }),
+  head: () => ({ meta: [{ title: "문의 · KJH Bot" }] }),
   loader: () => listServers(),
   component: SupportPage,
 });
@@ -57,9 +57,7 @@ function SupportPage() {
 
   return (
     <Shell>
-      <PageHead title="문의">
-        사이트 문의입니다. 비상은 고른 서버의 수신 메일로 갑니다. 실명, 계정 번호, 연락처는 올리지 마세요.
-      </PageHead>
+      <PageHead title="문의">실명, 계정 번호, 연락처는 적지 마세요.</PageHead>
 
       <form onSubmit={submit} className="mc-panel mt-8 grid gap-4 p-4 md:p-5">
         <fieldset>

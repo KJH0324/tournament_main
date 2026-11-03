@@ -3,7 +3,7 @@ import { manualGroups } from "@/lib/discord/manual";
 import { PageHead, Pill, Shell } from "@/components/shell";
 
 export const Route = createFileRoute("/commands")({
-  head: () => ({ meta: [{ title: "슬래시 명령 · Mission Control" }] }),
+  head: () => ({ meta: [{ title: "명령 · KJH Bot" }] }),
   loader: () => ({ groups: manualGroups() }),
   component: CommandsPage,
 });
@@ -12,7 +12,7 @@ function CommandsPage() {
   const { groups } = Route.useLoaderData();
   return (
     <Shell>
-      <PageHead title="슬래시 명령">일정과 도구는 이 목록의 슬래시만 동작합니다.</PageHead>
+      <PageHead title="명령" />
       <div className="mc-panel mt-6 grid gap-2 p-4 text-sm text-muted md:grid-cols-2">
         <p>관리 — 설정, 일정 생성, 채널, 로스터</p>
         <p>오거나이저 — 이의 접수</p>

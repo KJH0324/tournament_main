@@ -1,3 +1,5 @@
+import { stripStatusTag } from "./protocol";
+
 export function botToken(): string {
   return process.env.DISCORD_BOT_TOKEN?.trim() ?? "";
 }
@@ -28,12 +30,14 @@ export async function applicationId(): Promise<string> {
   return me.id;
 }
 
-export async function sendEmbed(channelId: string, description: string, title = "[ALERT] System Notice"): Promise<void> {
+export async function sendEmbed(channelId: string, description: string, title = "KJH Bot"): Promise<void> {
   if (!channelId || !botToken()) return;
+  const heading = stripStatusTag(title) || "KJH Bot";
+  const body = stripStatusTag(description).slice(0, 1800);
   await discordApi(`/channels/${channelId}/messages`, {
     method: "POST",
     body: JSON.stringify({
-      embeds: [{ title, description: description.slice(0, 1800), color: 0x2f7bff }],
+      embeds: [{ title: heading, description: body, color: 0x2f7bff }],
       allowed_mentions: { parse: [] },
     }),
   });

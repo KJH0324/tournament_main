@@ -98,13 +98,6 @@ export type Reply = {
   sideEffect?: () => Promise<void>;
 };
 
-const TITLES: Record<Tone, string> = {
-  success: "[SUCCESS] Sequence Completed",
-  error: "[ERROR] Critical Failure",
-  warning: "[ALERT] System Notice",
-  alert: "[ALERT] System Notice",
-};
-
 const COLORS: Record<Tone, number> = {
   success: 0x00ff41,
   error: 0xff0000,
@@ -112,8 +105,12 @@ const COLORS: Record<Tone, number> = {
   alert: 0x2f7bff,
 };
 
+export function stripStatusTag(value: string): string {
+  return value.replace(/^\[(?:SUCCESS|ERROR|ALERT|WARNING)\]\s*/i, "").trim();
+}
+
 export function reply(tone: Tone, description: string, extra: Partial<Reply> = {}): Reply {
-  return { tone, description: clean(description, 1800) || "[ERROR] Empty payload.", ...extra };
+  return { tone, description: clean(description, 1800) || "Empty payload.", ...extra };
 }
 
 export function ok(description: string, extra: Partial<Reply> = {}): Reply {
@@ -145,14 +142,16 @@ export function replyPayload(message: Reply) {
       inline: false,
     });
   }
+  const title = stripStatusTag(message.title ?? "");
+  const description = stripStatusTag(message.description) || "Empty payload.";
   const data: Record<string, unknown> = {
     embeds: [
       {
-        title: message.title ?? TITLES[message.tone],
-        description: message.description,
+        ...(title ? { title } : {}),
+        description,
         color: COLORS[message.tone],
         fields,
-        footer: { text: "Mission Control | [UPLINK] Channel Operations" },
+        footer: { text: "KJH Bot" },
       },
     ],
   };

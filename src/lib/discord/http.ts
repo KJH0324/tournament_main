@@ -59,7 +59,7 @@ export async function handleDiscordRequest(request: Request): Promise<Response> 
     }
   } catch (err) {
     console.error("[discord] http", err instanceof Error ? err.message : "error");
-    return Response.json({ type: 4, data: replyPayload(fail("[ERROR] Command failed.")) });
+    return Response.json({ type: 4, data: replyPayload(fail("Command failed.")) });
   }
   return Response.json({ type: 4, data: replyPayload(fail("[ERROR] Unsupported interaction.")) });
 }

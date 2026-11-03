@@ -6,7 +6,7 @@ import { AdminLogout } from "@/components/admin-login";
 import { PageHead, Pill, Shell } from "@/components/shell";
 
 export const Route = createFileRoute("/admin/")({
-  head: () => ({ meta: [{ title: "관리 · Mission Control" }] }),
+  head: () => ({ meta: [{ title: "관리 · KJH Bot" }] }),
   loader: async () => {
     const session = await getAdminSession();
     if (!session.authed) throw redirect({ to: "/admin/login" });
@@ -21,11 +21,11 @@ function AdminHome() {
   const { servers, main, accounts } = Route.useLoaderData();
   return (
     <Shell>
-      <PageHead title="관리">서버를 고르면 역할과 경기를 봅니다.</PageHead>
+      <PageHead title="관리" />
       <AdminLogout />
       {main ? <AdminAccounts accounts={accounts} /> : null}
       <ul className="mt-4 grid gap-3">
-        {servers.length === 0 ? <li className="mc-panel p-5 text-muted">아직 등록된 서버가 없습니다.</li> : null}
+        {servers.length === 0 ? <li className="mc-panel p-5 text-muted">등록된 서버가 없습니다.</li> : null}
         {servers.map((server) => (
           <li key={server.slug}>
             <Link to="/admin/s/$slug" params={{ slug: server.slug }} className="mc-panel flex items-center justify-between gap-3 p-4">

@@ -16,9 +16,9 @@ export function Shell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-10 border-b border-line bg-bg/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
           <Link to="/" className="flex shrink-0 items-center gap-3">
-            <span className="mc-mark">MC</span>
+            <span className="mc-mark text-sm">KJ</span>
             <span className="leading-tight">
-              <span className="block text-lg font-bold tracking-tight">Mission Control</span>
+              <span className="block text-lg font-bold tracking-tight">KJH Bot</span>
               <span className="block text-sm text-muted">레이븐 토너먼트</span>
             </span>
           </Link>
@@ -39,9 +39,19 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6 md:py-8">{children}</main>
-      <footer>
-        <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-6 text-sm text-muted md:flex-row md:justify-between">
-          <p>레이븐 토너먼트</p>
+      <footer className="border-t border-line">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="font-semibold text-fg">KJH Bot</p>
+            <p className="text-muted">레이븐 토너먼트</p>
+          </div>
+          <nav className="flex flex-wrap gap-x-4 gap-y-2 text-muted">
+            <Link to="/">서버</Link>
+            <Link to="/results">결과</Link>
+            <Link to="/commands">명령</Link>
+            <Link to="/support">문의</Link>
+          </nav>
+          <p className="text-muted">raven-tournament.xyz</p>
         </div>
       </footer>
     </div>

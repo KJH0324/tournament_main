@@ -4,7 +4,7 @@ import { formatKst } from "@/lib/raven/format";
 import { PageHead, Shell } from "@/components/shell";
 
 export const Route = createFileRoute("/results")({
-  head: () => ({ meta: [{ title: "결과 · Mission Control" }] }),
+  head: () => ({ meta: [{ title: "결과 · KJH Bot" }] }),
   loader: () => listResults(),
   component: ResultsPage,
 });
@@ -16,7 +16,7 @@ function ResultsPage() {
     <Shell>
       <PageHead title="결과" />
       {results.length === 0 ? (
-        <p className="mc-panel mt-8 p-5 text-muted">아직 확정된 결과가 없습니다.</p>
+        <p className="mc-panel mt-8 p-5 text-muted">결과가 없습니다.</p>
       ) : (
         <ul className="mc-panel mt-8 divide-y divide-line px-4">
           {results.map((match) => (

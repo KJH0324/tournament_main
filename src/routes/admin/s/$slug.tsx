@@ -7,7 +7,7 @@ import { AdminLogout } from "@/components/admin-login";
 import { PageHead, Pill, Shell } from "@/components/shell";
 
 export const Route = createFileRoute("/admin/s/$slug")({
-  head: () => ({ meta: [{ title: "관리 · Mission Control" }] }),
+  head: () => ({ meta: [{ title: "관리 · KJH Bot" }] }),
   loader: async ({ params }) => {
     const session = await getAdminSession();
     if (!session.authed) throw redirect({ to: "/admin/login" });

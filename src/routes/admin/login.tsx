@@ -3,7 +3,7 @@ import { getAdminSession } from "@/lib/admin/gate";
 import { AdminLogin } from "@/components/admin-login";
 
 export const Route = createFileRoute("/admin/login")({
-  head: () => ({ meta: [{ title: "관리 로그인 · Mission Control" }] }),
+  head: () => ({ meta: [{ title: "로그인 · KJH Bot" }] }),
   loader: async () => {
     const session = await getAdminSession();
     if (session.authed) throw redirect({ to: "/admin" });

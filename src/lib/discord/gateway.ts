@@ -17,7 +17,7 @@ import { findCommand } from "./catalog";
 import { makeContext } from "./context";
 import { autocomplete, dispatch, onComponent } from "./dispatch";
 import { gatewaySnapshot, writeGateway } from "./gateway-state";
-import type { AttachmentRef, Person, Reply } from "./protocol";
+import { type AttachmentRef, type Person, type Reply, stripStatusTag } from "./protocol";
 import { ensureRegistered } from "./register";
 import { botToken } from "./rest";
 
@@ -112,18 +112,12 @@ function fromButton(interaction: ButtonInteraction) {
 
 async function send(interaction: ChatInputCommandInteraction | ButtonInteraction, message: Reply) {
   const effect = message.sideEffect;
+  const title = stripStatusTag(message.title ?? "");
   const embed = new EmbedBuilder()
-    .setTitle(
-      message.title ??
-        (message.tone === "success"
-          ? "[SUCCESS] Sequence Completed"
-          : message.tone === "error"
-            ? "[ERROR] Critical Failure"
-            : "[ALERT] System Notice"),
-    )
-    .setDescription(message.description)
+    .setDescription(stripStatusTag(message.description) || "Empty payload.")
     .setColor(message.tone === "success" ? 0x00ff41 : message.tone === "error" ? 0xff0000 : message.tone === "warning" ? 0xffd400 : 0x2f7bff)
-    .setFooter({ text: "Mission Control | [UPLINK] Channel Operations" });
+    .setFooter({ text: "KJH Bot" });
+  if (title) embed.setTitle(title);
   for (const field of message.fields ?? []) {
     embed.addFields({ name: field.name.slice(0, 80) || "Field", value: field.value.slice(0, 900) || "—", inline: Boolean(field.inline) });
   }
@@ -203,7 +197,7 @@ export function ensureGateway() {
       } catch (err) {
         console.error("[discord] interaction", err instanceof Error ? err.message : "error");
         if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
-          await interaction.reply({ content: "[ERROR] Command failed.", flags: MessageFlags.Ephemeral }).catch(() => undefined);
+          await interaction.reply({ content: "Command failed.", flags: MessageFlags.Ephemeral }).catch(() => undefined);
         }
       }
     })();
