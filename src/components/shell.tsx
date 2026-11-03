@@ -67,7 +67,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <a href="https://admin.raven-tournament.xyz/" className="flex items-center gap-2 text-sm font-semibold tracking-wide">
             <img src="/brand/mark-black-transparent.png" alt="" width={28} height={28} className="h-7 w-7" />
-            관리
+            관리자
           </a>
           <a href="https://raven-tournament.xyz/" className="text-sm text-muted">
             사이트로

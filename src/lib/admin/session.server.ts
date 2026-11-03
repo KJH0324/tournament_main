@@ -83,12 +83,12 @@ export async function adminAuthed(): Promise<boolean> {
 }
 
 export async function assertAdmin(): Promise<void> {
-  if (!(await adminAuthed())) throw new Error("관리 로그인이 필요합니다.");
+  if (!(await adminAuthed())) throw new Error("관리자 로그인이 필요합니다.");
 }
 
 async function assertMain(): Promise<void> {
   const session = await readAdminSession();
-  if (!session.authed) throw new Error("관리 로그인이 필요합니다.");
+  if (!session.authed) throw new Error("관리자 로그인이 필요합니다.");
   if (!session.main) throw new Error("메인 관리자만 바꿀 수 있습니다.");
 }
 

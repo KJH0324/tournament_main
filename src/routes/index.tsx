@@ -41,7 +41,7 @@ function Home() {
   if (data.admin && data.authed) {
     return (
       <AdminShell>
-        <h1 className="text-3xl font-bold">관리</h1>
+        <h1 className="text-3xl font-bold">관리자</h1>
         <AdminLogout />
         {data.main ? <AdminAccounts accounts={data.accounts} /> : null}
         <TicketInbox tickets={data.tickets} />

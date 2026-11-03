@@ -1,7 +1,7 @@
 import { groups, rootCommands, type CommandSpec, type OptSpec, type ScopeLevel } from "./catalog.ts";
 
 export const LEVEL_KO: Record<ScopeLevel, string> = {
-  admin: "관리",
+  admin: "관리자",
   organizer: "오거나이저",
   supervisor: "슈퍼바이저",
   operator: "오퍼레이터",
@@ -128,7 +128,7 @@ export type ManualGroup = {
 };
 
 const OPTION_KO: Record<string, string> = {
-  "Admin role": "관리 역할",
+  "Admin role": "관리자 역할",
   "Organizer role": "오거나이저 역할",
   "Supervisor role": "슈퍼바이저 역할",
   "Operator role": "오퍼레이터 역할",
@@ -313,7 +313,7 @@ export function commandsMarkdown(): string {
     "",
     "| 등급 | 의미 |",
     "|---|---|",
-    "| 관리 | admin 역할. 설정, 일정 생성, 채널, 로스터 |",
+    "| 관리자 | admin 역할. 설정, 일정 생성, 채널, 로스터 |",
     "| 오거나이저 | 이의 접수와 검토 |",
     "| 슈퍼바이저 | 중단, 검증, 실격, 강제 승 |",
     "| 오퍼레이터 | 조회, 결과 입력, 코인, 시간·맵 추첨 |",

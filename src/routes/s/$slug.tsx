@@ -36,7 +36,7 @@ export const Route = createFileRoute("/s/$slug")({
 });
 
 const ROLE_LABEL = [
-  ["admin", "관리"],
+  ["admin", "관리자"],
   ["organizer", "오거나이저"],
   ["supervisor", "슈퍼바이저"],
   ["operator", "오퍼레이터"],
