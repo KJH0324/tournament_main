@@ -39,8 +39,12 @@ export function Shell({ children }: { children: ReactNode }) {
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6 md:py-8">{children}</main>
       <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 text-sm">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 text-sm sm:flex-row sm:items-center sm:justify-between">
           <p className="font-semibold">KJH Bot</p>
+          <nav className="flex flex-wrap gap-x-4 gap-y-2 text-muted">
+            <Link to="/terms">이용약관</Link>
+            <Link to="/privacy">개인정보 처리방침</Link>
+          </nav>
           <p className="text-muted">raven-tournament.xyz</p>
         </div>
       </footer>

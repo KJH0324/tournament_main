@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CommandsRouteImport } from './routes/commands'
 import { Route as DeskRouteImport } from './routes/desk'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as SupportRouteImport } from './routes/support'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
@@ -37,6 +39,11 @@ const DeskRoute = DeskRouteImport.update({
   path: '/desk',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
   path: '/results',
@@ -50,6 +57,11 @@ const ScheduleRoute = ScheduleRouteImport.update({
 const SupportRoute = SupportRouteImport.update({
   id: '/support',
   path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ToolsRoute = ToolsRouteImport.update({
@@ -87,9 +99,11 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/commands': typeof CommandsRoute
   '/desk': typeof DeskRoute
+  '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
   '/schedule': typeof ScheduleRoute
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/admin/login': typeof AdminLoginRoute
   '/api/discord': typeof ApiDiscordRoute
@@ -101,9 +115,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/commands': typeof CommandsRoute
   '/desk': typeof DeskRoute
+  '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
   '/schedule': typeof ScheduleRoute
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/admin/login': typeof AdminLoginRoute
   '/api/discord': typeof ApiDiscordRoute
@@ -116,9 +132,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/commands': typeof CommandsRoute
   '/desk': typeof DeskRoute
+  '/privacy': typeof PrivacyRoute
   '/results': typeof ResultsRoute
   '/schedule': typeof ScheduleRoute
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/admin/login': typeof AdminLoginRoute
   '/api/discord': typeof ApiDiscordRoute
@@ -132,9 +150,11 @@ export interface FileRouteTypes {
     | '/'
     | '/commands'
     | '/desk'
+    | '/privacy'
     | '/results'
     | '/schedule'
     | '/support'
+    | '/terms'
     | '/tools'
     | '/admin/login'
     | '/api/discord'
@@ -146,9 +166,11 @@ export interface FileRouteTypes {
     | '/'
     | '/commands'
     | '/desk'
+    | '/privacy'
     | '/results'
     | '/schedule'
     | '/support'
+    | '/terms'
     | '/tools'
     | '/admin/login'
     | '/api/discord'
@@ -160,9 +182,11 @@ export interface FileRouteTypes {
     | '/'
     | '/commands'
     | '/desk'
+    | '/privacy'
     | '/results'
     | '/schedule'
     | '/support'
+    | '/terms'
     | '/tools'
     | '/admin/login'
     | '/api/discord'
@@ -175,9 +199,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CommandsRoute: typeof CommandsRoute
   DeskRoute: typeof DeskRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResultsRoute: typeof ResultsRoute
   ScheduleRoute: typeof ScheduleRoute
   SupportRoute: typeof SupportRoute
+  TermsRoute: typeof TermsRoute
   ToolsRoute: typeof ToolsRoute
   AdminLoginRoute: typeof AdminLoginRoute
   ApiDiscordRoute: typeof ApiDiscordRoute
@@ -209,6 +235,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DeskRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/results': {
       id: '/results'
       path: '/results'
@@ -228,6 +261,13 @@ declare module '@tanstack/react-router' {
       path: '/support'
       fullPath: '/support'
       preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools': {
@@ -279,9 +319,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CommandsRoute: CommandsRoute,
   DeskRoute: DeskRoute,
+  PrivacyRoute: PrivacyRoute,
   ResultsRoute: ResultsRoute,
   ScheduleRoute: ScheduleRoute,
   SupportRoute: SupportRoute,
+  TermsRoute: TermsRoute,
   ToolsRoute: ToolsRoute,
   AdminLoginRoute: AdminLoginRoute,
   ApiDiscordRoute: ApiDiscordRoute,
