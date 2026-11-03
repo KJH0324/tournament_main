@@ -4,7 +4,7 @@ import { loginAdmin, logoutAdmin, prepareAdminLogin } from "@/lib/admin/gate";
 import { ErrorNote, PageHead, AdminShell } from "@/components/shell";
 import { Button, Label, TextField } from "@/components/ui";
 
-export function AdminLogin({ next = "/admin" }: { next?: string }) {
+export function AdminLogin({ next = "/" }: { next?: string }) {
   const [id, setId] = useState("");
   const [code, setCode] = useState("");
   const [qr, setQr] = useState("");
@@ -95,7 +95,7 @@ export function AdminLogout() {
     try {
       await logoutAdmin();
       await router.invalidate();
-      await router.navigate({ to: "/admin/login" });
+      window.location.assign("https://admin.raven-tournament.xyz/");
     } finally {
       setPending(false);
     }

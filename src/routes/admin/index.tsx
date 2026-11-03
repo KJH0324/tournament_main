@@ -1,43 +1,8 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { getAdminSession, listAdminAccounts } from "@/lib/admin/gate";
-import { listServers } from "@/lib/guilds/board";
-import { AdminAccounts } from "@/components/admin-accounts";
-import { AdminLogout } from "@/components/admin-login";
-import { AdminShell, PageHead, Pill } from "@/components/shell";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/admin/")({
-  head: () => ({ meta: [{ title: "관리 · KJH Bot" }] }),
-  loader: async () => {
-    const session = await getAdminSession();
-    if (!session.authed) throw redirect({ to: "/admin/login" });
-    const directory = await listServers();
-    const accounts = session.main ? await listAdminAccounts() : { accounts: [] };
-    return { servers: directory.servers, main: session.main, accounts: accounts.accounts };
+  loader: () => {
+    throw redirect({ href: "https://admin.raven-tournament.xyz/" });
   },
-  component: AdminHome,
+  component: () => null,
 });
-
-function AdminHome() {
-  const { servers, main, accounts } = Route.useLoaderData();
-  return (
-    <AdminShell>
-      <PageHead title="관리" />
-      <AdminLogout />
-      {main ? <AdminAccounts accounts={accounts} /> : null}
-      <ul className="mt-4 grid gap-3">
-        {servers.length === 0 ? <li className="mc-panel p-5 text-muted">등록된 서버가 없습니다.</li> : null}
-        {servers.map((server) => (
-          <li key={server.slug}>
-            <Link to="/admin/s/$slug" params={{ slug: server.slug }} className="mc-panel flex items-center justify-between gap-3 p-4">
-              <span>
-                <span className="block text-xl font-bold">{server.name}</span>
-                <span className="text-sm text-muted">/s/{server.slug}</span>
-              </span>
-              <Pill tone={server.ready ? "brass" : "muted"}>{server.ready ? "역할 준비" : "설정 대기"}</Pill>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </AdminShell>
-  );
-}

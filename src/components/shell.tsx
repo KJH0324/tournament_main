@@ -65,10 +65,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <div className="admin-shell min-h-screen text-fg">
       <header className="border-b border-line">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <Link to="/admin" className="text-sm font-semibold tracking-wide">
+          <a href="https://admin.raven-tournament.xyz/" className="text-sm font-semibold tracking-wide">
             관리
-          </Link>
-          <a href="/" className="text-sm text-muted">
+          </a>
+          <a href="https://raven-tournament.xyz/" className="text-sm text-muted">
             사이트로
           </a>
         </div>

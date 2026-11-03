@@ -1,17 +1,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { getAdminSession } from "@/lib/admin/gate";
-import { AdminLogin } from "@/components/admin-login";
 
 export const Route = createFileRoute("/admin/login")({
-  head: () => ({ meta: [{ title: "로그인 · KJH Bot" }] }),
-  loader: async () => {
-    const session = await getAdminSession();
-    if (session.authed) throw redirect({ to: "/admin" });
-    return null;
+  loader: () => {
+    throw redirect({ href: "https://admin.raven-tournament.xyz/" });
   },
-  component: LoginRoute,
+  component: () => null,
 });
-
-function LoginRoute() {
-  return <AdminLogin />;
-}

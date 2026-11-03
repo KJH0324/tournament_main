@@ -40,7 +40,7 @@ function Home() {
         <h1 className="text-3xl font-bold">관리</h1>
         <AdminLogout />
         {data.main ? <AdminAccounts accounts={data.accounts} /> : null}
-        <ServerList servers={data.servers} admin />
+        <ServerList servers={data.servers} />
       </AdminShell>
     );
   }
@@ -48,7 +48,7 @@ function Home() {
     <Shell>
       <h1 className="text-3xl font-bold">KJH Bot</h1>
       <p className="mt-1 text-sm text-muted">레이븐 토너먼트</p>
-      <ServerList servers={data.servers} admin={false} />
+      <ServerList servers={data.servers} />
       <section id="commands" className="mt-10">
         <h2 className="text-2xl font-bold">슬래시 명령어</h2>
         <div className="mt-4">
@@ -59,14 +59,14 @@ function Home() {
   );
 }
 
-function ServerList({ servers, admin }: { servers: ServerCard[]; admin: boolean }) {
+function ServerList({ servers }: { servers: ServerCard[] }) {
   return (
     <ul className="mt-6 divide-y divide-line border-y border-line">
       {servers.length === 0 ? <li className="py-4 text-sm text-muted">등록된 서버가 없습니다.</li> : null}
       {servers.map((server) => (
         <li key={server.slug}>
           <Link
-            to={admin ? "/admin/s/$slug" : "/s/$slug"}
+            to="/s/$slug"
             params={{ slug: server.slug }}
             className="flex min-h-14 items-center justify-between gap-3 py-3"
           >
